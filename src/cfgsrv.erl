@@ -75,23 +75,25 @@ update(Config_file) ->
 -spec init(Config_file :: string()) ->
 	{ok, #state{}}.
 init(Config_file) ->
-	{ok, Config} = file:consult(Config_file),
-	{ok, #state{config = Config}}.
+	case file:consult(Config_file) of
+		{ok, Config} -> {ok, #state{config = Config}};
+		_ -> {ok, #state{}}
+	end.
 
 -spec handle_call(Msg :: any(), From :: {pid(), _Tag}, #state{}) ->
 	{reply, Reply :: any(), #state{}}.
-handle_call({get, Key, Default}, _From, State) ->
-	Config = State#state.config,
-	Value = from_config(Config, Key, Default),
-	{reply, {ok, Value}, State};
+handle_call({get, Key, Default}, _From, State = #state{config = Config}) ->
+	{reply, {ok, from_config(Config, Key, Default)}, State};
 handle_call(_Request, _From, State) ->
 	{reply, ignored, State}.
 
 -spec handle_cast(Msg :: any(), #state{}) ->
 	{noreply, #state{}}.
-handle_cast({update_config, Config_file}, _State) ->
-	{ok, Config} = file:consult(Config_file),
-	{noreply, #state{config=Config}};
+handle_cast({update_config, Config_file}, State) ->
+	case file:consult(Config_file) of
+		{ok, Config} -> {noreply, #state{config = Config}};
+		_ -> {noreply, State}
+	end;
 handle_cast(_Msg, State) ->
 	{noreply, State}.
 
@@ -125,10 +127,8 @@ from_config2(Config, [Key | []], Default) ->
 	proplists:get_value(Key, Config, Default);
 from_config2(Config, [Path | Rest], Default) ->
 	case proplists:get_value(Path, Config) of
-		undefined ->
-			Default;
-		Config2 ->
-			from_config2(Config2, Rest, Default)
+		undefined -> Default;
+		Config2 -> from_config2(Config2, Rest, Default)
 	end.
 
 %% This is just a wrapper. Maybe later I will implement it on lower level as gen_server callback
@@ -136,10 +136,8 @@ get_multiple([], Results) ->
 	{ok, lists:reverse(Results)};
 get_multiple([Key | Keys], Results) ->
 	{Key2, Default} = if
-		is_tuple(Key) ->
-			Key;
-		true ->
-			{Key, ?DEFAULT_VALUE}
+		is_tuple(Key) -> Key;
+		true -> {Key, ?DEFAULT_VALUE}
 	end,
 	{ok, Result} = get(Key2, Default),
 	get_multiple(Keys, [Result | Results]).

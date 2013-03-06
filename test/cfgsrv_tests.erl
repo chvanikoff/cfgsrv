@@ -42,5 +42,13 @@ cfgsrv_test_() ->
 			?_test(?assertEqual(
 				{ok, mydefaultval},
 				cfgsrv:get("nonexistent.key", mydefaultval)
+			)),
+			?_test(?assertEqual(
+				ok,
+				cfgsrv:update("../test/test_config.config") %% let's try to load non-existing config
+			)),
+			?_test(?assertEqual(
+				{ok, customlorem},
+				cfgsrv:get("customkey1.subcustomkey1_1") %% and ensure that previous correct config still in use
 			))
 		]}}.
