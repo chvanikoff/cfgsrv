@@ -1,12 +1,12 @@
-REBAR = `which rebar || ./rebar`
+REBAR = `which rebar || echo ./rebar`
 
 all:
-	@( $(REBAR) compile skip_deps=true )
+	@( $(REBAR) compile)
 
 clean:
 	@( $(REBAR) clean )
 
 test:
-	@( $(REBAR) eunit skip_deps=true )
+	@( $(REBAR) eunit )
 
-.PHONY: test
+.PHONY: all clean test
