@@ -111,7 +111,10 @@ from_configs(Configs, Path, Key, Default) ->
 
 
 from_config2(Configs, [Key | []], Default) ->
-	proplists:get_value(Key, Configs, Default);
+	case lists:keyfind(Key, 1, Configs) of
+		{Key, Val} -> Val;
+		_ -> Default
+	end;
 
 from_config2(Config, [Path | Rest], Default) ->
 	case lists:keyfind(Path, 1, Config) of
