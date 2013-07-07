@@ -7,31 +7,47 @@ It is a very simple config server. I bet most of you have already done something
 
 Usage:
 
+Save your config files with ".config" extension wherever you want. In my case this will be priv/config/dev and priv/config/prod
 
+Example structure of "priv" directory:
+![Example tree output for priv directory](http://puu.sh/3wGDa.png "Example tree output for priv directory")
+
+Example config file content (more examples could be found in priv/config directory of the project):
+
+![Example config content](http://puu.sh/3wHns.png "Example config content")
+
+- Starting Cfgsrv
+
+```erlang
+cfgsrv:start(),
+cfgsrv:set_path("priv/config/dev"). %% Default path when application was started is priv/config
 ```
-{ok, Pid} = cfgsrv:start_link("path_to_config"),
-{ok, Val} = cfgsrv:get(key). %% atoms are also allowed ;)
+
+- Reading config values
+
+```erlang
+cfgsrv:get("app", "key"), %% "Value"
+cfgsrv:get("app.key_with_subkeys", "subkey2"). %% subkey2_value
+cfgsrv:get("app.key_with_subkeys", "nonexistent_key", my_default_value). %% my_default_value
 ```
 
+- Reading multiple values from config
 
-Features:
-
-- read config values from config file
-
+```erlang
+%% You can also pass tuple {Key, Default_value} to get Default_value instead of 'undefined' when the key was not found
+cfgsrv:get_multiple("app.key_with_subkeys.subkey1", ["subsubkey1", {"subsubkey2", default_value}, {"subsubkey3", default_value}]).
+%% The result will be [subsubkey1_value, subsubkey2_value, default_value]
 ```
-{ok, Value} = cfgsrv:get("some.key"),
 
-{ok, Value2} = cfgsrv:get("some.key2", "this is default value (which is 'undefined' by default)").
-```
-- read multiple values from config file
+- Updating configs
 
+```erlang
+cfgsrv:update() %% This will update all configs data from the initial :PATH
+cfgsrv:update("app") %% This will update only app.config data from the initial :PATH ("priv/config/dev")
 ```
-{ok, [Value1, Value2]} = cfgsrv:get(["some.key1", "some.key2"]),
 
-{ok, [{Value1, "default value for this key"}, Value2]} = cfgsrv:get(["some.key1", "some.key2"]).
-```
-- replace config file
+- Updating configs path
 
-```
-ok = cfgsrv:update("another_cfg.config").
+```erlang
+cfgsrv:set_path("priv/config/prod") %% This will change path from "dev" to "prod" and load new configs
 ```
