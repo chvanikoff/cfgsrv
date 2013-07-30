@@ -69,8 +69,12 @@ handle_cast({update_config, File}, #state{path = Path, configs = Configs} = Stat
 	end;
 
 handle_cast({set_path, Path}, State) ->
-	Configs = load_configs(Path),
-	{noreply, State#state{path = Path, configs = Configs}};
+	case filelib:is_dir(Path) of
+		true ->
+			Configs = load_configs(Path),
+			{noreply, State#state{path = Path, configs = Configs}};
+		_ -> {noreply, State}
+	end;
 
 handle_cast(_Msg, State) ->
 	{noreply, State}.

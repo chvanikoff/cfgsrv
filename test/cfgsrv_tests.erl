@@ -46,5 +46,21 @@ cfgsrv_test_() ->
 			?_test(?assertEqual(
 				mydefaultval,
 				cfgsrv:get("app", "nonexistent.key", mydefaultval)
+			)),
+			?_test(?assertEqual(
+				ok,
+				cfgsrv:set_path("unexistent/path")
+			)),
+			?_test(?assertEqual(
+				"prod_Value",
+				cfgsrv:get("app", "key")
+			)),
+			?_test(?assertEqual(
+				ok,
+				cfgsrv:set_path("../priv/config/dev")
+			)),
+			?_test(?assertEqual(
+				["127.0.0.1", 8087, nonexistent],
+				cfgsrv:get_multiple("riak", ["host", "port", {"nonexistent.key", nonexistent}])
 			))
 		]}}.
