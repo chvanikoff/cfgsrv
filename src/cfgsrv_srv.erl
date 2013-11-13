@@ -42,11 +42,14 @@ start_link(Path) ->
 %% ===================================================================
 
 init(Path) ->
+	ets:new(cfgsrv, [set, named_table, {read_concurrency, true}]),
 	Configs = load_configs(Path),
 	{ok, #state{configs = Configs, path = Path}}.
 
 
 handle_call({get, Path, Key, Default}, _From, State = #state{configs = Configs}) ->
+	Data = from_configs(Configs, Path, Key, Default),
+	ets:insert(cfgsrv, {{Path,Key,Default}, Data}),
 	{reply, from_configs(Configs, Path, Key, Default), State};
 
 handle_call(test, _From, State) ->
@@ -99,7 +102,9 @@ load_configs(Path) ->
 	load_configs(filelib:wildcard(Path ++ "/*.config"), []).
 
 
-load_configs([], Acc) -> Acc;
+load_configs([], Acc) -> 
+	ets:delete_all_objects(cfgsrv),
+	Acc;
 load_configs([File | Files], Acc) ->
 	case file:consult(File) of
 		{ok, [Config]} -> load_configs(Files, [{list_to_atom(filename:basename(File, ".config")), Config} | Acc]);
