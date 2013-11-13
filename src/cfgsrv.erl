@@ -34,7 +34,10 @@ get(Path, Key) ->
 
 
 get(Path, Key, Default) ->
-	gen_server:call(?SERVER, {get, Path, Key, Default}).
+	case ets:lookup(cfgsrv, {Path, Key, Default}) of
+		[] -> gen_server:call(?SERVER, {get, Path, Key, Default});
+		[{_, Val}] -> Val
+	end.
 
 
 get_multiple(Path, Keys) ->
