@@ -14,7 +14,7 @@ Example structure of "priv" directory:
 
 Example config file content (more examples could be found in priv/config directory of the project):
 
-![Example config content](http://puu.sh/3wHns.png "Example config content")
+![Example config content](http://puu.sh/6xos1.png "Example config content")
 
 - Starting Cfgsrv
 
@@ -51,3 +51,8 @@ cfgsrv:update("app") %% This will update only app.config data from the initial :
 ```erlang
 cfgsrv:set_path("priv/config/prod") %% This will change path from "dev" to "prod" and load new configs
 ```
+
+- Extending
+
+To extend any other config you can add `{extends, "path"}` key to your .config file ("path" is relative to current configs path).
+If you will pass path to any directory without specifying a filename then config with the same name will be extended.
