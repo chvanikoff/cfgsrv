@@ -33,11 +33,17 @@ cfgsrv_test_() ->
 			)),
 			?_test(?assertEqual(
 				ok,
-				cfgsrv:set_path("../priv/config/prod")
+				%% set_path requires some time to deal with extended configs, in this test case it takes not more than 0.01s
+				begin ok = cfgsrv:set_path("../priv/config/prod"), timer:sleep(10) end
 			)),
 			?_test(?assertEqual(
 				"prod_Value",
 				cfgsrv:get("app", "key")
+			)),
+			%% tests extending prod/app.config with dev/cowboy.config
+			?_test(?assertEqual(
+				8008,
+				cfgsrv:get("app", "port")
 			)),
 			?_test(?assertEqual(
 				undefined,

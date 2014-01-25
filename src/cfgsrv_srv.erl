@@ -107,9 +107,29 @@ load_configs([], Acc) ->
 	Acc;
 load_configs([File | Files], Acc) ->
 	case file:consult(File) of
-		{ok, [Config]} -> load_configs(Files, [{list_to_atom(filename:basename(File, ".config")), Config} | Acc]);
+		{ok, [Config]} ->
+			New_cfg = get_cfg(File, Config),
+			load_configs(Files, [New_cfg | Acc]);
 		_ -> load_configs(Files, Acc)
 	end.
+
+
+get_cfg(File, Config) ->
+	Config2 = case lists:keyfind(extends, 1, Config) of
+		false -> Config;
+		{_, Path} ->
+			Ext = lists:concat([filename:dirname(File), "/", Path]),
+			Ext2 = case filelib:is_dir(Ext) of
+				true -> Ext ++ "/" ++ filename:basename(File);
+				_ -> Ext
+			end,
+			case file:consult(Ext2) of
+				{ok, [Ext_cfg]} ->
+					dict:to_list(dict:merge(fun(_, V, _) -> V end, dict:from_list(Config), dict:from_list(Ext_cfg)));
+				_ -> Config
+			end
+	end,
+	{list_to_atom(filename:basename(File, ".config")), Config2}.
 
 
 from_configs(Configs, Path, Key, Default) ->
